@@ -1,4 +1,3 @@
-# animals/views.py
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
