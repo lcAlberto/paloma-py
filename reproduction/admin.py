@@ -11,6 +11,7 @@ class ReproductionCycleAdmin(admin.ModelAdmin):
         'actual_calving_date',
         'status',
     )
+    autocomplete_fields = ['female_animal', 'male_animal', 'calf_born',]
     list_filter = ('status', 'mating_type', 'female_animal__farm')
     search_fields = ('female_animal__name', 'male_animal__name', 'identifier')
     raw_id_fields = ('female_animal', 'male_animal', 'calf_born')
