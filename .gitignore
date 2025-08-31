@@ -1,0 +1,13 @@
+# Django
+__pycache__/
+*.pyc
+db.sqlite3
+
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Arquivos de IDE (opcional, mas recomendado)
+.vscode/
+.idea/

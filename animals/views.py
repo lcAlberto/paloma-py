@@ -1,11 +1,12 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError # IMPORTAÇÃO CORRETA
+from rest_framework.exceptions import ValidationError  # IMPORTAÇÃO CORRETA
 
 from .models import Animal
 from .serializers import AnimalSerializer
 from users.models import User
+
 
 class AnimalViewSet(viewsets.ModelViewSet):
     serializer_class = AnimalSerializer

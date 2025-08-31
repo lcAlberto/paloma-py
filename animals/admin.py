@@ -5,6 +5,7 @@ from .models import Breed, Classification, Status, Animal
 class AnimalAdmin(admin.ModelAdmin):
     list_display = ('name', 'identifier', 'farm')
     list_filter = ('farm',)
+    search_fields = ['name', 'identifier']
 
 admin.site.register(Breed)
 admin.site.register(Classification)
