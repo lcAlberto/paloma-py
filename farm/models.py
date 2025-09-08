@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from users.models import User # Importa o modelo de usuário customizado
 
@@ -30,7 +32,12 @@ class FarmUser(models.Model):
         return f"{self.user.name} em {self.farm.name}"
 
 class Farm(models.Model):
-    identifier = models.CharField(max_length=50, unique=True, verbose_name="Identificador da Fazenda")
+    identifier = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        verbose_name="Identificador da Fazenda"
+    )
     name = models.CharField(max_length=255, unique=True, verbose_name="Nome da Fazenda")
     image = models.ImageField(upload_to='farm_images/', blank=True, null=True, verbose_name="Imagem da Fazenda")
 
