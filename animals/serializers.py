@@ -2,22 +2,79 @@ from rest_framework import serializers
 from .models import Animal, Breed, Classification, Status
 from farm.models import Farm
 
-class AnimalSerializer(serializers.ModelSerializer):
+
+class FarmSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Farm
+        fields = ['id', 'name', 'identifier']
+
+
+class BreedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Breed
+        fields = ['id', 'name', 'value']
+
+
+class ClassificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Classification
+        fields = ['id', 'name', 'value']
+
+
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = ['id', 'name', 'value']
+
+
+class ParentAnimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Animal
+        fields = ['id', 'name', 'identifier', 'sex']
+
+class AnimalSerializer(serializers.ModelSerializer):
+    farm = FarmSerializer(read_only=True)
+    breed = BreedSerializer(read_only=True)
+    classification = ClassificationSerializer(read_only=True)
+    status = StatusSerializer(read_only=True)
+    mother = ParentAnimalSerializer(read_only=True)
+    father = ParentAnimalSerializer(read_only=True)
+
+    farm_id = serializers.PrimaryKeyRelatedField(
+        queryset=Farm.objects.all(), source='farm', write_only=True
+    )
+    breed_id = serializers.PrimaryKeyRelatedField(
+        queryset=Breed.objects.all(), source='breed', write_only=True
+    )
+    classification_id = serializers.PrimaryKeyRelatedField(
+        queryset=Classification.objects.all(), source='classification', write_only=True
+    )
+    status_id = serializers.PrimaryKeyRelatedField(
+        queryset=Status.objects.all(), source='status', write_only=True
+    )
+    mother_id = serializers.PrimaryKeyRelatedField(
+        queryset=Animal.objects.filter(sex='female'),
+        source='mother',
+        allow_null=True,
+        required=False,
+        write_only=True
+    )
+    father_id = serializers.PrimaryKeyRelatedField(
+        queryset=Animal.objects.filter(sex='male'),
+        source='father',
+        allow_null=True,
+        required=False,
+        write_only=True
+    )
+
+    class Meta:
+        model = Animal
+
         fields = [
-            'id',
-            'identifier',
-            'name',
-            'sex',
-            'born_date',
-            'image',
-            'mother',
-            'father',
-            'breed',
-            'classification',
-            'status',
-            'farm'
+            'id', 'identifier', 'name', 'sex', 'born_date', 'image',
+            'farm', 'breed', 'classification', 'status', 'mother', 'father',
+            'farm_id', 'breed_id', 'classification_id', 'status_id',
+            'mother_id', 'father_id'
         ]
         read_only_fields = ['id']
 
