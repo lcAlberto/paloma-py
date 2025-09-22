@@ -90,13 +90,6 @@ class AnimalSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'age' ]
 
     def validate(self, data):
-        # mother_id = data.get('mother')
-        # father_id = data.get('father')
-
-        # if mother_id and not Animal.objects.filter(id=mother_id, sex='female').exists():
-        #     raise serializers.ValidationError({'mother': 'Mãe inválida ou não é fêmea.'})
-        # if father_id and not Animal.objects.filter(id=father_id, sex='male').exists():
-        #     raise serializers.ValidationError({'father': 'Pai inválido ou não é macho.'})
         return data
 
     def create(self, validated_data):
