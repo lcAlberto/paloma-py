@@ -1,6 +1,8 @@
-from rest_framework import serializers
+from rest_framework import viewsets, status, generics, serializers
+from datetime import date
 from .models import Animal, Breed, Classification, Status
 from farm.models import Farm
+from loguru import logger
 
 
 class FarmSerializer(serializers.ModelSerializer):
@@ -28,9 +30,18 @@ class StatusSerializer(serializers.ModelSerializer):
 
 
 class ParentAnimalSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+
     class Meta:
         model = Animal
-        fields = ['id', 'name', 'identifier', 'sex']
+        fields = ['id', 'name', 'identifier', 'sex', 'age']
+
+    def get_age(self, obj):
+        today = date.today()
+        if obj.born_date:
+            age_in_days = (today - obj.born_date).days
+            return age_in_days // 365
+        return None
 
 class AnimalSerializer(serializers.ModelSerializer):
     farm = FarmSerializer(read_only=True)
@@ -74,30 +85,11 @@ class AnimalSerializer(serializers.ModelSerializer):
             'id', 'identifier', 'name', 'sex', 'born_date', 'image',
             'farm', 'breed', 'classification', 'status', 'mother', 'father',
             'farm_id', 'breed_id', 'classification_id', 'status_id',
-            'mother_id', 'father_id'
+            'mother_id', 'father_id', 'is_active',  'is_alive'
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'age' ]
 
     def validate(self, data):
-        breed_id = data.get('breed')
-        classification_id = data.get('classification')
-        status_id = data.get('status')
-        mother_id = data.get('mother')
-        father_id = data.get('father')
-        farm_id = data.get('farm')
-
-        if breed_id and not Breed.objects.filter(id=breed_id).exists():
-            raise serializers.ValidationError({'breed': 'Raça inválida.'})
-        if classification_id and not Classification.objects.filter(id=classification_id).exists():
-            raise serializers.ValidationError({'classification': 'Classificação inválida.'})
-        if status_id and not Status.objects.filter(id=status_id).exists():
-            raise serializers.ValidationError({'status': 'Status inválido.'})
-        if mother_id and not Animal.objects.filter(id=mother_id, sex='female').exists():
-            raise serializers.ValidationError({'mother': 'Mãe inválida ou não é fêmea.'})
-        if father_id and not Animal.objects.filter(id=father_id, sex='male').exists():
-            raise serializers.ValidationError({'father': 'Pai inválido ou não é macho.'})
-        if farm_id and not Farm.objects.filter(id=farm_id).exists():
-            raise serializers.ValidationError({'farm': 'Fazenda inválida.'})
         return data
 
     def create(self, validated_data):

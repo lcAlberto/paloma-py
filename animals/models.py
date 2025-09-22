@@ -6,6 +6,7 @@ from users.models import User # Importe o nosso modelo de usuário
 class Breed(models.Model):
     name = models.CharField(max_length=100, unique=True)
     value = models.CharField(max_length=100, blank=True)
+    isEnabled = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -13,6 +14,8 @@ class Breed(models.Model):
 class Classification(models.Model):
     name = models.CharField(max_length=100, unique=True)
     value = models.CharField(max_length=100, blank=True)
+    isReproducible = models.BooleanField(default=True)
+    isEnabled = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -20,6 +23,8 @@ class Classification(models.Model):
 class Status(models.Model):
     name = models.CharField(max_length=100, unique=True)
     value = models.CharField(max_length=100, blank=True)
+    isReproducible = models.BooleanField(default=True)
+    isEnabled = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -29,6 +34,12 @@ class Animal(models.Model):
     SEX_CHOICES = [
         ('female', 'Female'),
         ('male', 'Male'),
+    ]
+
+    DISASSOCIATED_CHOICES = [
+        ('sold', 'Sold'),
+        ('dead', 'Dead'),
+        ('offline', 'Offline'),
     ]
 
     identifier = models.CharField(max_length=50, unique=True, verbose_name="Identificador único")
@@ -55,6 +66,14 @@ class Animal(models.Model):
     breed = models.ForeignKey(Breed, on_delete=models.PROTECT)
     classification = models.ForeignKey(Classification, on_delete=models.PROTECT)
     status = models.ForeignKey(Status, on_delete=models.PROTECT)
+    is_active = models.BooleanField(default=True)
+    is_alive = models.BooleanField(default=True)
+    dissociated_reasons = models.TextField(
+        blank=True,
+        null=True,
+        max_length=10,
+        choices=DISASSOCIATED_CHOICES
+    )
 
     farm = models.ForeignKey(
         Farm,
@@ -65,3 +84,9 @@ class Animal(models.Model):
 
     def __str__(self):
         return self.name
+
+class Comments(models.Model):
+    animal = models.ForeignKey(Animal, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.TextField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
