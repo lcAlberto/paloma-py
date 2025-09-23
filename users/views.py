@@ -1,9 +1,9 @@
-# users/views.py
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import User
-from .serializers import UserRegisterSerializer
+from .serializers import UserRegisterSerializer, CustomTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 class UserRegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -20,3 +20,6 @@ class UserRegisterView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
