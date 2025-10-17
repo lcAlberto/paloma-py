@@ -18,7 +18,7 @@ class ReproductionCycle(models.Model):
 
     female_animal = models.ForeignKey(
         Animal,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name='reproduction_cycles_as_female',
         limit_choices_to={'sex': 'female'},
         verbose_name="Animal Fêmea"
