@@ -1,6 +1,7 @@
 from django.db import models
 from animals.models import Animal
 from datetime import timedelta
+import datetime
 
 class ReproductionCycle(models.Model):
     MATING_TYPE_CHOICES = [
@@ -24,8 +25,8 @@ class ReproductionCycle(models.Model):
         verbose_name="Animal Fêmea"
     )
 
-    heat_start_date = models.DateField(verbose_name="Data de Início do Cio")
-    mating_date = models.DateField(verbose_name="Data da Cobertura")
+    heat_start_date = models.DateTimeField(verbose_name="Data de Início do Cio")
+    mating_date = models.DateTimeField(verbose_name="Data da Cobertura")
 
     mating_type = models.CharField(
         max_length=15,
@@ -43,13 +44,13 @@ class ReproductionCycle(models.Model):
         verbose_name="Animal Macho (se natural)"
     )
 
-    predicted_calving_date = models.DateField(
+    predicted_calving_date = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="Data Prevista do Parto"
     )
 
-    actual_calving_date = models.DateField(
+    actual_calving_date = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="Data Real do Parto"
@@ -80,8 +81,7 @@ class ReproductionCycle(models.Model):
         return f"Ciclo de {self.female_animal.name} em {self.mating_date}"
 
     def save(self, *args, **kwargs):
-        # Calcula a data prevista do parto se a data de cobertura for fornecida
-        # Período de gestação médio para gado é de ~283 dias
         if self.mating_date and not self.predicted_calving_date:
             self.predicted_calving_date = self.mating_date + timedelta(days=283)
+
         super().save(*args, **kwargs)
