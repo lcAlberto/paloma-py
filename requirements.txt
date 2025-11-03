@@ -12,3 +12,4 @@ rest-framework-simplejwt==0.0.2
 sqlparse==0.5.3
 typing-extensions==4.13.2
 django-loguru
+pillow

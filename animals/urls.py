@@ -4,7 +4,8 @@ from .views import (
     AnimalViewSet,
     BreedViewSet,
     ClassificationViewSet,
-    StatusViewSet, ParentsListAPIView,
+    StatusViewSet,
+    ParentsListAPIView,
 )
 
 router = DefaultRouter()
