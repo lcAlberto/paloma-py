@@ -5,8 +5,14 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response  # Importamos Response
 
 from .filters import ReproductionCycleFilter
-from .models import ReproductionCycle
-from .serializers import ReproductionCycleSerializer
+from .models import ReproductionCycle, SemenDonor
+from .serializers import ReproductionCycleSerializer, SemenDonorSerializer
+
+
+class SemenDonorViewSet(viewsets.ModelViewSet):
+    queryset = SemenDonor.objects.all()
+    serializer_class = SemenDonorSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class ReproductionCycleViewSet(viewsets.ModelViewSet):
@@ -19,28 +25,23 @@ class ReproductionCycleViewSet(viewsets.ModelViewSet):
         user = self.request.user
         user_farms = user.farms.all()
         return (ReproductionCycle.objects.filter(female_animal__farm__in=user_farms)
-        .select_related('female_animal', 'male_animal', 'calf_born'))
+        .select_related('female_animal', 'male_animal', 'semen_donor', 'calf_born'))
 
     def perform_create(self, serializer):
-        # O serializer.validated_data contém os objetos Animal
         female_animal = serializer.validated_data.get('female_animal')
         male_animal = serializer.validated_data.get('male_animal')
         user = self.request.user
 
-        # Validação de permissão para Animal Fêmea
         if female_animal.farm not in user.farms.all():
             raise ValidationError(
                 {"female_animal_id": "Você não tem permissão para criar ciclos reprodutivos para este animal."}
             )
 
-        # Validação de permissão para Animal Macho (se fornecido)
-        # male_animal pode ser None (Ex: inseminação artificial)
         if male_animal and male_animal.farm not in user.farms.all():
             raise ValidationError(
-                {"male_animal_id": "Você não tem permissão para usar este animal macho para ciclos reprodutivos."}
+                {"male_animal_id": "Você não tem permissão para usar este touro para ciclos reprodutivos."}
             )
 
-        # Salva o ciclo, o que aciona o método save() no Model e calcula o predicted_calving_date
         serializer.save()
 
     def create(self, request, *args, **kwargs):
@@ -50,21 +51,16 @@ class ReproductionCycleViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Salva o objeto (o método save() do modelo calcula a data prevista)
         self.perform_create(serializer)
 
-        # A data prevista do parto já estará no serializer.data após o save
         predicted_date = serializer.data.get('predicted_calving_date')
 
-        # Cria a resposta personalizada (incluindo todos os dados do ciclo + a mensagem)
         response_data = serializer.data
 
         if predicted_date:
-            # Formato da data no BR
-            predicted_date_br = predicted_date  # DRF retorna a data no formato ISO
             response_data['message'] = (
                 f"Ciclo reprodutivo criado com sucesso! "
-                f"A data prevista do parto é: {predicted_date_br}"
+                f"A data prevista do parto é: {predicted_date}"
             )
         else:
             response_data['message'] = "Ciclo reprodutivo criado com sucesso."

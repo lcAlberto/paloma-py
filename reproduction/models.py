@@ -1,7 +1,45 @@
 from django.db import models
-from animals.models import Animal
+from animals.models import Animal, Breed
 from datetime import timedelta
 import datetime
+
+class SemenDonor(models.Model):
+    name = models.CharField(max_length=100, verbose_name="Nome do Doador")
+    registration_number = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="Registro/Identificador"
+    )
+    breed = models.ForeignKey(
+        Breed,
+        on_delete=models.PROTECT,
+        verbose_name="Raça"
+    )
+    born_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Data de Nascimento do Doador"
+    )
+    origin_farm_name = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Fazenda de Origem/Central de Coleta"
+    )
+    collection_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Data da Coleta do Sêmen"
+    )
+
+    class Meta:
+        verbose_name = "Doador de Sêmen"
+        verbose_name_plural = "Doadores de Sêmen"
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.breed.name})"
 
 class ReproductionCycle(models.Model):
     MATING_TYPE_CHOICES = [
@@ -39,9 +77,17 @@ class ReproductionCycle(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='reproduction_cycles_as_male',
+        related_name='reproduction_cycles_as_father',
         limit_choices_to={'sex': 'male'},
-        verbose_name="Animal Macho (se natural)"
+        verbose_name="Touro (se monta natural)"
+    )
+
+    semen_donor = models.ForeignKey(
+        SemenDonor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Doador de Sêmen (se IA)"
     )
 
     predicted_calving_date = models.DateTimeField(
@@ -85,3 +131,16 @@ class ReproductionCycle(models.Model):
             self.predicted_calving_date = self.mating_date + timedelta(days=283)
 
         super().save(*args, **kwargs)
+
+    def clean(self):
+        # Lógica de validação ATUALIZADA para usar male_animal
+        if self.mating_type == 'natural' and (self.semen_donor is not None or self.male_animal is None):
+            raise models.ValidationError({
+                'male_animal': 'O Touro é obrigatório para monta natural.',
+                'semen_donor': 'O Doador de Sêmen deve ser nulo para monta natural.'
+            })
+        if self.mating_type == 'artificial' and (self.male_animal is not None or self.semen_donor is None):
+            raise models.ValidationError({
+                'male_animal': 'O Touro deve ser nulo para IA.',
+                'semen_donor': 'O Doador de Sêmen é obrigatório para IA.'
+            })

@@ -1,5 +1,7 @@
 from rest_framework import viewsets, status, generics, serializers
 from datetime import date
+
+from reproduction.models import SemenDonor
 from .models import Animal, Breed, Classification, Status
 from farm.models import Farm
 from loguru import logger
@@ -77,6 +79,15 @@ class AnimalSerializer(serializers.ModelSerializer):
         required=False,
         write_only=True
     )
+    semen_donor_hather = serializers.PrimaryKeyRelatedField(
+        queryset=SemenDonor.objects.all(),
+        source='semen_donor',
+        allow_null=True,
+        required=False,
+        write_only=True
+    )
+
+    # current_life_stage = serializers.ReadOnlyField(source='current_life_stage')
 
     class Meta:
         model = Animal
@@ -85,9 +96,10 @@ class AnimalSerializer(serializers.ModelSerializer):
             'id', 'identifier', 'name', 'sex', 'born_date', 'image',
             'farm', 'breed', 'classification', 'status', 'mother', 'father',
             'farm_id', 'breed_id', 'classification_id', 'status_id',
-            'mother_id', 'father_id', 'is_active',  'is_alive'
+            'mother_id', 'father_id', 'is_active',  'is_alive',
+            'current_life_stage', 'semen_donor_hather'
         ]
-        read_only_fields = ['id', 'age' ]
+        read_only_fields = ['id', 'current_life_stage', 'age' ]
 
     def validate(self, data):
         return data
