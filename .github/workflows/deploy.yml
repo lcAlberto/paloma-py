@@ -23,7 +23,9 @@ jobs:
 
       - name: Build and Push Image via Cloud Build
         run: |
-          gcloud builds submit . --tag southamerica-east1-docker.pkg.dev/paloma-api-prod/paloma-repo/paloma-api:latest
+          gcloud builds submit . \
+            --tag southamerica-east1-docker.pkg.dev/paloma-api-prod/paloma-repo/paloma-api:latest \
+            --suppress-logs
 
       - name: Deploy to Cloud Run
         run: |
