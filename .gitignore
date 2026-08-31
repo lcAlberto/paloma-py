@@ -10,4 +10,5 @@ env/
 
 # Arquivos de IDE (opcional, mas recomendado)
 .vscode/
-.idea/
+.idea/gcp-key.json
+*.json
