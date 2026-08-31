@@ -1,6 +1,4 @@
 asgiref==3.8.1
-# backports.zoneinfo
-# backports.zoneinfo==0.2.1
 django==4.2.24
 django-cors-headers==4.4.0
 django-extensions==3.2.3
@@ -8,8 +6,14 @@ django-filter==24.3
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
 PyJWT==2.9.0
-rest-framework-simplejwt==0.0.2
 sqlparse==0.5.3
-typing-extensions==4.13.2
-django-loguru
-pillow
+typing-extensions>=4.12.0
+django-loguru>=1.0.3
+pillow>=10.0.0
+
+# Libs de Conexão, Produção e Variaveis de Ambiente
+psycopg2-binary==2.9.9
+dj-database-url==2.1.0
+python-decouple==3.8
+gunicorn==22.0.0
+whitenoise==6.6.0
