@@ -130,6 +130,12 @@ CORS_ALLOWED_ORIGINS = config(
     cast=Csv(),
 )
 
+# Pega da variável de ambiente separada por vírgula, ou usa lista vazia por padrão
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://paloma-api-783631601640.southamerica-east1.run.app'
+).split(',')
+
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
