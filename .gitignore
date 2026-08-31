@@ -1,14 +1,23 @@
-# Django
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
-db.sqlite3
+*$py.class
 
-# Ambiente virtual
+# Database local
+db.sqlite3
+*.sqlite3
+
+# Ambiente Virtual
 .venv/
 venv/
 env/
+ENV/
 
-# Arquivos de IDE (opcional, mas recomendado)
-.vscode/
-.idea/gcp-key.json
+# Variáveis de Ambiente e Segredos GCP
+.env
+gcp-key.json
 *.json
+
+# Configurações de IDEs
+.vscode/
+.idea/
