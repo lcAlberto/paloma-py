@@ -7,6 +7,12 @@ class AnimalAdmin(admin.ModelAdmin):
     list_filter = ('farm',)
     search_fields = ['name', 'identifier']
 
-admin.site.register(Breed)
+
+@admin.register(Breed)
+class BreedAdmin(admin.ModelAdmin):
+    list_display = ('name', 'value', 'isEnabled', 'average_gestation_days')
+    list_filter = ('name', 'value', 'isEnabled', 'average_gestation_days',)
+    search_fields = ['name', 'value']
+
 admin.site.register(Classification)
 admin.site.register(Status)
