@@ -9,8 +9,13 @@ from decouple import Csv, config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
-SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
+
+# Fallback seguro apenas para ambiente local se DEBUG=True
+SECRET_KEY = config(
+    'SECRET_KEY',
+    default='django-insecure-local-dev-key-change-me-in-production' if DEBUG else None
+)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
@@ -72,19 +77,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core_api.wsgi.application'
 
-# Database Setup (Supabase / Postgres via DATABASE_URL)
-# Se DATABASE_URL não for provido, cai para o sqlite local como fallback de segurança
+# Database Setup
+# Usa DATABASE_URL. Se não fornecido, usa Postgres local via Docker bridge.
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default=config(
+            'DATABASE_URL',
+            default=f"postgres://postgres:postgrespassword@db:5432/paloma_dev"
+        ),
         conn_max_age=600,
         conn_health_checks=True,
+        ssl_require=not DEBUG,  # Exige SSL apenas fora de desenvolvimento
     )
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# Desativa Server-Side Cursors caso esteja conectando via Transaction Pooler do Supabase (PgBouncer)
+db_host = DATABASES['default'].get('HOST', '')
+if 'pooler.supabase.com' in db_host or DATABASES['default'].get('PORT') == 6543:
+    DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
 
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -130,15 +142,16 @@ CORS_ALLOWED_ORIGINS = config(
     cast=Csv(),
 )
 
-# Pega da variável de ambiente separada por vírgula, ou usa lista vazia por padrão
-CSRF_TRUSTED_ORIGINS = os.getenv(
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    'https://paloma-api-783631601640.southamerica-east1.run.app'
-).split(',')
+    default='https://paloma-api-783631601640.southamerica-east1.run.app',
+    cast=Csv(),
+)
 
 # Internationalization
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'pt-br'
+TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
 

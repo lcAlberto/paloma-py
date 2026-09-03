@@ -17,3 +17,4 @@ dj-database-url==2.1.0
 python-decouple==3.8
 gunicorn==22.0.0
 whitenoise==6.6.0
+geopy==2.5.0
