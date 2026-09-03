@@ -15,9 +15,15 @@ ENV/
 
 # Variáveis de Ambiente e Segredos GCP
 .env
+.venv/
+env/
+venv/
 gcp-key.json
 *.json
 
 # Configurações de IDEs
 .vscode/
 .idea/
+
+# Arquivos estáticos gerados pelo collectstatic
+/staticfiles/

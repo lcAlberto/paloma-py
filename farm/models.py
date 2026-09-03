@@ -2,6 +2,8 @@ import uuid
 
 from django.db import models
 from users.models import User # Importa o modelo de usuário customizado
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 class Address(models.Model):
     cep = models.CharField(max_length=9, verbose_name="CEP") # Ex: 12345-678
@@ -10,6 +12,8 @@ class Address(models.Model):
     bairro = models.CharField(max_length=100, verbose_name="Bairro")
     cidade = models.CharField(max_length=100, verbose_name="Cidade")
     estado = models.CharField(max_length=100, verbose_name="Estado")
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
     class Meta:
         verbose_name = "Endereço"
@@ -17,6 +21,24 @@ class Address(models.Model):
 
     def __str__(self):
         return f"{self.rua}, {self.numero} - {self.cidade}/{self.estado}"
+
+    def update_coordinates(self):
+        """Busca as coordenadas aproximadas da cidade/estado para definir a microrregião."""
+        geolocator = Nominatim(user_agent="bovine_management_system")
+        try:
+            query = f"{self.cidade}, {self.estado}, Brasil"
+            location = geolocator.geocode(query, timeout=5)
+            if location:
+                self.latitude = location.latitude
+                self.longitude = location.longitude
+        except (GeocoderTimedOut, GeocoderServiceError):
+            pass
+
+    def save(self, *args, **kwargs):
+        if not self.latitude or not self.longitude:
+            self.update_coordinates()
+        super().save(*args, **kwargs)
+
 
 class FarmUser(models.Model):
     farm = models.ForeignKey('Farm', on_delete=models.CASCADE)

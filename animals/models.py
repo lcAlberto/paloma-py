@@ -11,6 +11,11 @@ class Breed(models.Model):
     value = models.CharField(max_length=100, blank=True)
     isEnabled = models.BooleanField(default=True)
 
+    average_gestation_days = models.PositiveSmallIntegerField(
+        default=283,
+        verbose_name="Dias Médios de Gestação"
+    )
+
     def __str__(self):
         return self.name
 

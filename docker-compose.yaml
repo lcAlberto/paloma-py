@@ -1,14 +1,33 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: paloma_api_db_local
+    restart: always
+    environment:
+      POSTGRES_DB: paloma_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   web:
     build: .
-    container_name: paloma_api_web
+    container_name: paloma_api_web_local
     restart: always
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    environment:
+      - SECRET_KEY=django-insecure-local-dev-key
+      - DEBUG=True
+      - DATABASE_URL=postgres://postgres:postgrespassword@db:5432/paloma_dev
     volumes:
       - .:/app
-    command: >
-      sh -c "python manage.py migrate &&
-             gunicorn core_api.wsgi:application --bind 0.0.0.0:8000 --reload"
+    depends_on:
+      - db
+    # Sobrescreve apenas a inicialização do server para o modo dev
+    command: python manage.py runserver 0.0.0.0:8000
+
+volumes:
+  postgres_data:
