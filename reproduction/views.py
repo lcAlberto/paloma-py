@@ -24,43 +24,45 @@ class ReproductionCycleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         user_farms = user.farms.all()
-        return (ReproductionCycle.objects.filter(female_animal__farm__in=user_farms)
-        .select_related('female_animal', 'male_animal', 'semen_donor', 'calf_born'))
+        return (
+            ReproductionCycle.objects.filter(female_animal__farm__in=user_farms)
+            .select_related('female_animal', 'male_animal', 'semen_donor', 'calf_born')
+        )
+
+    def _validate_farm_permissions(self, female_animal, male_animal, user):
+        """Valida se o usuário tem acesso às fazendas dos animais informados."""
+        user_farms = user.farms.all()
+
+        if female_animal and female_animal.farm not in user_farms:
+            raise ValidationError(
+                {"female_animal_id": "Você não tem permissão para gerenciar ciclos para esta fêmea."}
+            )
+
+        if male_animal and male_animal.farm not in user_farms:
+            raise ValidationError(
+                {"male_animal_id": "Você não tem permissão para utilizar este touro."}
+            )
 
     def perform_create(self, serializer):
         female_animal = serializer.validated_data.get('female_animal')
         male_animal = serializer.validated_data.get('male_animal')
-        user = self.request.user
 
-        if female_animal.farm not in user.farms.all():
-            raise ValidationError(
-                {"female_animal_id": "Você não tem permissão para criar ciclos reprodutivos para este animal."}
-            )
-
-        if male_animal and male_animal.farm not in user.farms.all():
-            raise ValidationError(
-                {"male_animal_id": "Você não tem permissão para usar este touro para ciclos reprodutivos."}
-            )
-
+        self._validate_farm_permissions(female_animal, male_animal, self.request.user)
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        """
-        Sobrescreve o método create para retornar a data prevista do parto na resposta.
-        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         self.perform_create(serializer)
 
-        predicted_date = serializer.data.get('predicted_calving_date')
-
         response_data = serializer.data
+        predicted_date = response_data.get('predicted_calving_date')
 
         if predicted_date:
             response_data['message'] = (
                 f"Ciclo reprodutivo criado com sucesso! "
-                f"A data prevista do parto é: {predicted_date}"
+                f"Data prevista do parto: {predicted_date}"
             )
         else:
             response_data['message'] = "Ciclo reprodutivo criado com sucesso."
@@ -69,12 +71,13 @@ class ReproductionCycleViewSet(viewsets.ModelViewSet):
         return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_update(self, serializer):
-        female_animal = serializer.validated_data.get('female_animal')
-        user = self.request.user
+        # Trata edições parciais (PATCH): recupera o valor existente caso não enviado no payload
+        female_animal = serializer.validated_data.get(
+            'female_animal', getattr(serializer.instance, 'female_animal', None)
+        )
+        male_animal = serializer.validated_data.get(
+            'male_animal', getattr(serializer.instance, 'male_animal', None)
+        )
 
-        if female_animal.farm not in user.farms.all():
-            raise ValidationError(
-                {"female_animal_id": "Você não tem permissão para atualizar ciclos reprodutivos para este animal."}
-            )
-
+        self._validate_farm_permissions(female_animal, male_animal, self.request.user)
         serializer.save()

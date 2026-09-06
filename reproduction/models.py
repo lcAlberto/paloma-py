@@ -160,12 +160,59 @@ class ReproductionCycle(models.Model):
         return gestation_days
 
     def save(self, *args, **kwargs):
-        # Recalcula a previsão se houver mating_date e se for um novo registro ou se predicted_calving_date for nulo
+        # Recalcula a previsão se houver mating_date e for novo ou predicted_calving_date for nulo
         if self.mating_date and not self.predicted_calving_date:
             gestation_days = self.calculate_estimated_gestation_days()
             self.predicted_calving_date = self.mating_date + timedelta(days=gestation_days)
 
         super().save(*args, **kwargs)
+
+        # Trata transição de categoria da fêmea baseada nos eventos reprodutivos
+        self.apply_reproduction_events()
+
+    def apply_reproduction_events(self):
+        """Atualiza a categoria zootécnica e estado de prenhez da fêmea com base nos ciclos."""
+        female = self.female_animal
+        farm = female.farm
+
+        if not farm.auto_update_categories:
+            return
+
+        updated_fields = []
+
+        # 1. Confirmação / Ativação da Gestação
+        if self.status == 'active':
+            if not female.is_pregnant:
+                female.is_pregnant = True
+                updated_fields.append('is_pregnant')
+
+        # 2. Ocorreu o Parto com Sucesso ('calved')
+        elif self.status == 'calved':
+            if female.is_pregnant:
+                female.is_pregnant = False
+                updated_fields.append('is_pregnant')
+
+            # Vira Vaca Lactante após parir
+            if female.category != 'vaca_lactante':
+                female.category = 'vaca_lactante'
+                updated_fields.append('category')
+
+        # 3. Falha ou Aborto
+        elif self.status in ['failed', 'aborted']:
+            if female.is_pregnant:
+                female.is_pregnant = False
+                updated_fields.append('is_pregnant')
+
+        if updated_fields:
+            female.save(update_fields=updated_fields)
+
+    # # def save(self, *args, **kwargs):
+    # #     # Recalcula a previsão se houver mating_date e se for um novo registro ou se predicted_calving_date for nulo
+    # #     if self.mating_date and not self.predicted_calving_date:
+    # #         gestation_days = self.calculate_estimated_gestation_days()
+    # #         self.predicted_calving_date = self.mating_date + timedelta(days=gestation_days)
+    #
+    #     super().save(*args, **kwargs)
 
     def clean(self):
         super().clean()
