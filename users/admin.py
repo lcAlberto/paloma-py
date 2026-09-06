@@ -6,7 +6,7 @@ from django.utils.html import format_html
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from farm.models import FarmUser, Farm
-from .models import User
+from .models import User, UserPreference
 from rest_framework.authtoken.models import Token
 
 
@@ -94,3 +94,9 @@ class UserAdmin(BaseUserAdmin):
         return ", ".join([farm.name for farm in obj.farms.all()])
 
     get_farms.short_description = 'Fazendas'
+
+
+class UserPreferenceInline(admin.StackedInline):
+    model = UserPreference
+    can_delete = False
+    verbose_name_plural = 'Preferências do Usuário'

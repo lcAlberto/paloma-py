@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from farm.models import Farm
+from farm.serializers import FarmSerializer
 from .models import User
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -23,10 +24,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
-class FarmSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Farm
-        fields = ['id', 'name', 'identifier']
+# class FarmSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Farm
+#         fields = ['id', 'name', 'identifier']
 
 
 class UserDataSerializer(serializers.ModelSerializer):
