@@ -5,6 +5,7 @@ from django.db import models
 from farm.models import Farm
 # from reproduction.models import SemenDonor
 from users.models import User
+from dateutil.relativedelta import relativedelta
 
 class Breed(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -39,6 +40,21 @@ class Status(models.Model):
 
 
 class Animal(models.Model):
+    CATEGORY_CHOICES = [
+        # Fêmeas
+        ('bezerra', 'Bezerra'),
+        ('novilha', 'Novilha (Apta/Anestro)'),
+        ('vaca_lactante', 'Vaca Lactante'),
+        ('vaca_seca', 'Vaca Seca'),
+        ('vaca_descarte', 'Vaca Descarte'),
+        # Machos
+        ('bezerro', 'Bezerro'),
+        ('novilho', 'Novilho / Garrote'),
+        ('reprodutor', 'Reprodutor / Touro'),
+        ('rufiao', 'Rufião'),
+        ('capao', 'Castrado / Boi Gordo'),
+    ]
+
     SEX_CHOICES = [
         ('female', 'Female'),
         ('male', 'Male'),
@@ -81,6 +97,20 @@ class Animal(models.Model):
     breed = models.ForeignKey(Breed, on_delete=models.PROTECT)
     classification = models.ForeignKey(Classification, on_delete=models.PROTECT)
     status = models.ForeignKey(Status, on_delete=models.PROTECT)
+    category = models.CharField(
+        max_length=30,
+        choices=CATEGORY_CHOICES,
+        default='bezerra',
+        verbose_name="Categoria Zootécnica"
+    )
+    is_pregnant = models.BooleanField(
+        default=False,
+        verbose_name="Está Gestante?"
+    )
+    is_castrated = models.BooleanField(
+        default=False,
+        verbose_name="É Castrado?"
+    )
     is_active = models.BooleanField(default=True)
     is_alive = models.BooleanField(default=True)
     dissociated_reasons = models.TextField(
@@ -115,27 +145,52 @@ class Animal(models.Model):
         return max(0, age_months)
 
     @property
-    def current_life_stage(self):
-        """Retorna o estágio de vida do animal com base na idade (calculado)."""
-        age_months = self._get_age_in_months()
+    def age_in_months(self) -> int:
+        if not self.born_date:
+            return 0
+        today = date.today()
+        delta = relativedelta(today, self.born_date)
+        return delta.years * 12 + delta.months
 
-        if self.sex == 'male':
-            if age_months < 6:
-                return "Bezerro"
-            elif age_months < 24:
-                return "Garrote"
+    def update_category_by_age(self):
+        """Atualiza a categoria zootécnica baseada na idade e nas configurações da fazenda."""
+        if not self.farm.auto_update_categories or not self.born_date:
+            return
+
+        months = self.age_in_months
+        weaning_age = self.farm.weaning_age_months
+        mating_age = self.farm.mating_age_months
+
+        if self.sex == 'female':
+            # Fêmea não altera categoria se já for uma vaca adulta em ciclo produtivo
+            if self.category in ['vaca_lactante', 'vaca_seca']:
+                return
+
+            if months < weaning_age:
+                self.category = 'bezerra'
+            elif months >= weaning_age:
+                self.category = 'novilha'
+
+        elif self.sex == 'male':
+            if self.is_castrated:
+                self.category = 'capao'
+                return
+
+            if self.category == 'rufiao':
+                return
+
+            if months < weaning_age:
+                self.category = 'bezerro'
+            elif weaning_age <= months < mating_age:
+                self.category = 'novilho'
             else:
-                return "Macho Adulto"  # Classificação de uso (Capão, Touro, Rufião) é manual
+                self.category = 'reprodutor'
 
-        elif self.sex == 'female':
-            if age_months < 6:
-                return "Bezerra"
-            elif age_months < 24:
-                return "Novilha"
-            else:
-                return "Fêmea Adulta"  # Classificação de uso (Leiteira, Seca) é manual
-
-        return "Desconhecido"
+    def save(self, *args, **kwargs):
+        # Dispara atualização por idade se o recurso da fazenda estiver ativado
+        if self.farm_id and self.farm.auto_update_categories:
+            self.update_category_by_age()
+        super().save(*args, **kwargs)
 
 class Comments(models.Model):
     animal = models.ForeignKey(Animal, on_delete=models.CASCADE)

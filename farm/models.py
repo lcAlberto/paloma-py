@@ -79,6 +79,21 @@ class Farm(models.Model):
         verbose_name="Usuários Associados"
     )
 
+    auto_update_categories = models.BooleanField(
+        default=True,
+        verbose_name="Atualizar Categorias Zootécnicas Automaticamente",
+        help_text="Se ativado, altera automaticamente a categoria do animal (ex: Bezerra -> Novilha -> Vaca) baseado na idade e eventos de parto."
+    )
+    weaning_age_months = models.PositiveIntegerField(
+        default=8,
+        verbose_name="Idade Média de Desmame (Meses)",
+        help_text="Idade em que bezerras(os) passam para a categoria de Novilha/Garrote."
+    )
+    mating_age_months = models.PositiveIntegerField(
+        default=24,
+        verbose_name="Idade de Aptidão Reprodutiva / Adulto (Meses)"
+    )
+
     class Meta:
         verbose_name = "Fazenda"
         verbose_name_plural = "Fazendas"
