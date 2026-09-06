@@ -7,4 +7,5 @@ urlpatterns = [
     path('api/', include('farm.urls')),
     path('api/', include('animals.urls')),
     path('api/', include('reproduction.urls')),
+    path('api/', include('notifications.urls')),
 ]

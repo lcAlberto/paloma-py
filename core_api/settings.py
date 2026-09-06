@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'farm',
     'animals',
     'reproduction',
+    'notifications',
 
     # CORS
     'corsheaders',

@@ -94,6 +94,20 @@ class Farm(models.Model):
         verbose_name="Idade de Aptidão Reprodutiva / Adulto (Meses)"
     )
 
+    # farm settings
+    notify_calving_days_before = models.PositiveIntegerField(
+        default=7,
+        verbose_name="Dias de Antecedência para Alerta de Parto"
+    )
+    notify_heat_days_after_calving = models.PositiveIntegerField(
+        default=45,
+        verbose_name="Dias Pós-Parto para Alerta de Retorno ao Cio"
+    )
+    notify_drug_withdrawal_days_before = models.PositiveIntegerField(
+        default=2,
+        verbose_name="Dias de Antecedência para Fim da Carência de Medicamentos"
+    )
+
     class Meta:
         verbose_name = "Fazenda"
         verbose_name_plural = "Fazendas"
